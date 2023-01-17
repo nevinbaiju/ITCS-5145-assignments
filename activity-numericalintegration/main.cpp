@@ -23,19 +23,17 @@ float f4(float x, int intensity);
 #endif
 
 
-// Attempt to write a generic function and pass the function rather than repeat it in a switch case.
-// I'm new to C++ :)
-// float compute (function<int(int, int)> func, float a, float b, int n, int intensity){
-//   float b_minus_a_over_n = (b - a)/n;
-//   float ans = 0;
-//   for (int i = 0; i<n; i++){
-//     ans = ans + func(a + (i + 0.5)*b_minus_a_over_n, intensity);
-//   }
-//   ans = ans*b_minus_a_over_n;
+float compute (float (*func)(float, int), float a, float b, int n, int intensity){
+  float b_minus_a_over_n = (b - a)/n;
+  float ans = 0;
+  for (int i = 0; i<n; i++){
+    ans = ans + func(a + (i + 0.5)*b_minus_a_over_n, intensity);
+  }
+  ans = ans*b_minus_a_over_n;
 
-//   return ans;
+  return ans;
 
-// }
+}
 
 int main (int argc, char* argv[]) {
   auto start = chrono::steady_clock::now();
@@ -50,50 +48,35 @@ int main (int argc, char* argv[]) {
   int n = atoi(argv[4]);
   int intensity = atoi(argv[5]);
 
+
   switch(function_id) {
     case 1:{
-      float b_minus_a_over_n = (b - a)/n;
-      float ans = 0;
-      for (int i = 0; i<n; i++){
-        ans = ans + f1(a + (i + 0.5)*b_minus_a_over_n, intensity);
-      }
-      ans = ans*b_minus_a_over_n;
+      float ans = compute(&f1, a, b, n, intensity);
       cout << ans << "\n";
       break;
     }
+
     case 2:{
-      float b_minus_a_over_n = (b - a)/n;
-      float ans = 0;
-      for (int i = 0; i<n; i++){
-        ans = ans + f2(a + (i + 0.5)*b_minus_a_over_n, intensity);
-      }
-      ans = ans*b_minus_a_over_n;
+      float ans = compute(&f2, a, b, n, intensity);
       cout << ans << "\n";
       break;
     }
+
     case 3:{
-      float b_minus_a_over_n = (b - a)/n;
-      float ans = 0;
-      for (int i = 0; i<n; i++){
-        ans = ans + f3(a + (i + 0.5)*b_minus_a_over_n, intensity);
-      }
-      ans = ans*b_minus_a_over_n;
+      float ans = compute(&f3, a, b, n, intensity);
       cout << ans << "\n";
       break;
     }
+
     case 4:{
-      float b_minus_a_over_n = (b - a)/n;
-      float ans = 0;
-      for (int i = 0; i<n; i++){
-        ans = ans + f4(a + (i + 0.5)*b_minus_a_over_n, intensity);
-      }
-      ans = ans*b_minus_a_over_n;
+      float ans = compute(&f4, a, b, n, intensity);
       cout << ans << "\n";
       break;
     }
     default:
     cout << "Wrong function ID";
   }
+
   auto end = chrono::steady_clock::now();
   double time_taken = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() / 1e9;
 
