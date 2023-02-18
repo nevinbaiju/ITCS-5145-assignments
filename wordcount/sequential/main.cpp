@@ -75,11 +75,8 @@ int main(int argc, char **argv)
 
   // Start Timer
   auto start =std::chrono::steady_clock::now();
-  int total_threads = wordmap.size();
-  std::thread fileThreads[total_threads];
 
   // Populate Hash Table
-  int i = 0;
   for (auto & filecontent: wordmap) {
     for (auto & w : filecontent) {
       int count = dict.get(w);
