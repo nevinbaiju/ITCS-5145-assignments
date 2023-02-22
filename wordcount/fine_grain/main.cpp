@@ -102,6 +102,7 @@ int main(int argc, char **argv)
     std::thread fileThreads[length];
     for (auto & w : filecontent) {
       fileThreads[i] = std::thread(increment, w, std::ref(dict));
+      // increment(w, dict);
       i++;
       std::cout << i << "/" << length << "\r";
     }

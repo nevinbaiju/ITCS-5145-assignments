@@ -32,7 +32,8 @@ protected:
   int count;
   double loadFactor;
   int partition;
-  mutable std::mutex lock[16];
+  int buckets = 50;
+  mutable std::vector<std::unique_ptr<std::mutex>> lock;
 
   std::vector<Node<K,V>*> table;
 
@@ -118,17 +119,18 @@ public:
     index = index < 0 ? index + this->capacity : index;
     const Node<K,V>* node = this->table[index];
     int mutex_id = (int)(index/this->partition);
-    // lock[mutex_id].lock();
+    lock[mutex_id]->lock();
     // std::cout << mutex_id << " Locked\n";
 
     while (node != nullptr) {
-      if (node->key == key)
-        // lock[mutex_id].unlock();
+      if (node->key == key){
+        lock[mutex_id]->unlock();
         // std::cout << mutex_id << " UnLocked\n";
 	      return node->value;
+      }
       node = node->next;
     }
-    // lock[mutex_id].unlock();
+    lock[mutex_id]->unlock();
     // std::cout << mutex_id << " UnLocked with return v\n";
     return V();
   }
@@ -145,7 +147,7 @@ public:
     Node<K,V>* node = this->table[index];
     int mutex_id = (int)(index/this->partition);
     // std::cout << "Using mutex id: " << mutex_id << " \n";
-    // lock[mutex_id].lock();
+    lock[mutex_id]->lock();
     // std::cout << "1\n";
     // std::cout << mutex_id << " Locked\n";
 
@@ -153,7 +155,7 @@ public:
       if (node->key == key) {
 	      node->value = value;
         // std::cout<< "Set mut" << mutex_id <<"unlocked 1st one\n";
-        // lock[mutex_id].unlock();
+        lock[mutex_id]->unlock();
         // std::cout << mutex_id << " UnLocked\n";
 	      return;
       }
@@ -166,11 +168,11 @@ public:
     node->next = this->table[index];
     this->table[index] = node;
     this->count++;
-    // lock[mutex_id].unlock();
+    lock[mutex_id]->unlock();
     // std::cout<< "Set mut" << mutex_id <<"unlocked 2nd one\n";
-    if (((double)this->count)/this->capacity > this->loadFactor) {
-      this->resize(this->capacity * 2);
-    }
+    // if (((double)this->count)/this->capacity > this->loadFactor) {
+    //   this->resize(this->capacity * 2);
+    // }
     // std::cout << "Here2\n";
   }
 
@@ -186,7 +188,11 @@ public:
   MyHashtable(int capacity, double loadFactor): capacity(capacity), count(0), loadFactor(loadFactor) {
     
     this->table.resize(capacity, nullptr);
-    this->partition = (int)(this->capacity/16);
+    this->partition = (int)(this->capacity/this->buckets);
+
+    for(int i=0; i<buckets; i++){
+      lock.push_back(std::make_unique<std::mutex>());
+    }
   }
 
   virtual ~MyHashtable() {    
