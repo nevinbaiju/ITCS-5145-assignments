@@ -118,17 +118,17 @@ public:
     index = index < 0 ? index + this->capacity : index;
     const Node<K,V>* node = this->table[index];
     int mutex_id = (int)(index/this->partition);
-    lock[mutex_id].lock();
+    // lock[mutex_id].lock();
     // std::cout << mutex_id << " Locked\n";
 
     while (node != nullptr) {
       if (node->key == key)
-        lock[mutex_id].unlock();
+        // lock[mutex_id].unlock();
         // std::cout << mutex_id << " UnLocked\n";
 	      return node->value;
       node = node->next;
     }
-    lock[mutex_id].unlock();
+    // lock[mutex_id].unlock();
     // std::cout << mutex_id << " UnLocked with return v\n";
     return V();
   }
@@ -145,7 +145,7 @@ public:
     Node<K,V>* node = this->table[index];
     int mutex_id = (int)(index/this->partition);
     // std::cout << "Using mutex id: " << mutex_id << " \n";
-    lock[mutex_id].lock();
+    // lock[mutex_id].lock();
     // std::cout << "1\n";
     // std::cout << mutex_id << " Locked\n";
 
@@ -153,7 +153,7 @@ public:
       if (node->key == key) {
 	      node->value = value;
         // std::cout<< "Set mut" << mutex_id <<"unlocked 1st one\n";
-        lock[mutex_id].unlock();
+        // lock[mutex_id].unlock();
         // std::cout << mutex_id << " UnLocked\n";
 	      return;
       }

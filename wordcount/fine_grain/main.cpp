@@ -105,6 +105,7 @@ int main(int argc, char **argv)
       i++;
       std::cout << i << "/" << length << "\r";
     }
+    std::cout << "\n";
     // std::cout << "sdfsdfsd";
     // hash_words(filecontent, dict);
     for (i=0; i< length; i++){
