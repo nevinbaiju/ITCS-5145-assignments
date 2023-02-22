@@ -2,9 +2,12 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include "Dictionary.cpp"
 #include "MyHashtable.cpp"
+
 
 //Tokenize a string into individual word, removing punctuation at the
 //end of words
@@ -45,7 +48,15 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
   return ret;
 }
 
-
+void increment(std::string key, Dictionary<std::string, int> & dict){
+  // std::cout<< "getting\n";
+  // std::cout << key <<"\n";
+  // std::cout<< "before getting\n";
+  int count = dict.get(key);
+  ++count;
+  // std::cout<< "setting\n";
+  dict.set(key, count);
+}
 
 int main(int argc, char **argv)
 {
@@ -58,7 +69,6 @@ int main(int argc, char **argv)
   std::string source = argv[1];
   std::string testWord = argv[2];
   int32_t thresholdCount = std::stoi(argv[3]);
-
   // Obtain List of Files
   std::vector<std::string> files;
   std::ifstream in (source);
@@ -71,31 +81,53 @@ int main(int argc, char **argv)
   auto wordmap = tokenizeLyrics(files);
 
   MyHashtable<std::string, int> ht;
-  Dictionary<std::string, int>& dict = ht;
-
-
+  Dictionary<std::string, int> & dict = ht;
 
   // write code here
+  // Start Timer
+  auto start =std::chrono::steady_clock::now();
+  int total_threads = wordmap.size();
+  std::thread fileThreads[total_threads];
 
-
-
-
-
-
-
-
-
-  /*
-  // Check Hash Table Values 
-  // (you can uncomment, but this must be commented out for tests)
-  for (auto it : dict) {
-    if (it.second > thresholdCount)
-      std::cout << it.first << " " << it.second << std::endl;
+  // Populate Hash Table
+  // Populate Hash Table
+  // for (int i=0; i<total_threads; i++){
+  //   fileThreads[i] = std::thread(hash_words, wordmap[i], dict);
+  // }
+  int i = 0;
+  int length = wordmap.size();
+  for (auto & filecontent: wordmap) {
+    int i = 0;
+    int length = filecontent.size();
+    std::thread fileThreads[length];
+    for (auto & w : filecontent) {
+      fileThreads[i] = std::thread(increment, w, std::ref(dict));
+      i++;
+      std::cout << i << "/" << length << "\r";
+    }
+    // std::cout << "sdfsdfsd";
+    // hash_words(filecontent, dict);
+    for (i=0; i< length; i++){
+      fileThreads[i].join();
+    }
   }
-  */
 
-  // Do not touch this, need for test cases
+
+  // Stop Timer
+  auto stop = std::chrono::steady_clock::now();
+  std::chrono::duration<double> time_elapsed = stop-start;
+
+  // Check Hash Table Values
+  
+  // for (auto it : dict) {
+  //   if (it.second > thresholdCount)
+  //     std::cout << it.first << " " << it.second << std::endl;
+  // }
+
+  // Need for test cases.
   std::cout << ht.get(testWord) << std::endl;
+
+  std::cerr << time_elapsed.count()<<"\n";
 
   return 0;
 }

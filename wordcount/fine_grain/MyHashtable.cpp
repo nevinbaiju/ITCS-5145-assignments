@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 #include <vector>
+#include <mutex>
+
 
 template<class K, class V>
 struct Node {
@@ -20,6 +22,7 @@ struct Node {
   ~Node() = default;
 };
 
+
 template<class K, class V>
 class MyHashtable : public Dictionary<K, V> {
 protected:
@@ -28,6 +31,9 @@ protected:
   int capacity;
   int count;
   double loadFactor;
+  int partition;
+  mutable std::mutex lock[16];
+
   std::vector<Node<K,V>*> table;
 
   struct hashtable_iter : public dict_iter {
@@ -39,6 +45,7 @@ protected:
     virtual ~hashtable_iter() = default;
 
     void advance() {
+      // std::cout << "In advance";
       if (cur != nullptr) {
         cur = cur->next;
       }
@@ -79,11 +86,13 @@ protected:
   };
 
   void resize(int capacity) {
+      // std::cout << "In resize";
     //Note that this function works by creating a brand new hashtable
     //and stealing its data at the end. This causes more memory
     //allocation than are really necessary as we could reuse all the
     //node objects without having a create a single new one.
     auto temp_table = MyHashtable(capacity, this->loadFactor);
+    this->partition = (int)(capacity/16);
 
     for (auto node : this->table) {
       while (node != nullptr) {
@@ -97,7 +106,6 @@ protected:
     std::swap(this->capacity, temp_table.capacity);
     std::swap(this->table, temp_table.table); 
   }
-
 public:
   /**
    * Returns the node at key
@@ -105,15 +113,23 @@ public:
    * @return node of type Node at key
    */
   virtual V get(const K& key) const {
+    // std::cout << "here";
     std::size_t index = std::hash<K>{}(key) % this->capacity;
     index = index < 0 ? index + this->capacity : index;
     const Node<K,V>* node = this->table[index];
+    int mutex_id = (int)(index/this->partition);
+    lock[mutex_id].lock();
+    // std::cout << mutex_id << " Locked\n";
 
     while (node != nullptr) {
       if (node->key == key)
+        lock[mutex_id].unlock();
+        // std::cout << mutex_id << " UnLocked\n";
 	      return node->value;
       node = node->next;
     }
+    lock[mutex_id].unlock();
+    // std::cout << mutex_id << " UnLocked with return v\n";
     return V();
   }
 
@@ -123,26 +139,39 @@ public:
    * @param value new value of node
    */
   virtual void set(const K& key, const V& value) {
+    // std::cout << this->capacity << "\n";
     std::size_t index = std::hash<K>{}(key) % this->capacity;
     index = index < 0 ? index + this->capacity : index;
     Node<K,V>* node = this->table[index];
-    
+    int mutex_id = (int)(index/this->partition);
+    // std::cout << "Using mutex id: " << mutex_id << " \n";
+    lock[mutex_id].lock();
+    // std::cout << "1\n";
+    // std::cout << mutex_id << " Locked\n";
+
     while (node != nullptr) {
       if (node->key == key) {
 	      node->value = value;
+        // std::cout<< "Set mut" << mutex_id <<"unlocked 1st one\n";
+        lock[mutex_id].unlock();
+        // std::cout << mutex_id << " UnLocked\n";
 	      return;
       }
       node = node->next;
     }
+    // std::cout << "Here1\n";
 
     //if we get here, then the key has not been found
     node = new Node<K,V>(key, value);
     node->next = this->table[index];
     this->table[index] = node;
     this->count++;
+    // lock[mutex_id].unlock();
+    // std::cout<< "Set mut" << mutex_id <<"unlocked 2nd one\n";
     if (((double)this->count)/this->capacity > this->loadFactor) {
       this->resize(this->capacity * 2);
     }
+    // std::cout << "Here2\n";
   }
 
   /**
@@ -157,6 +186,7 @@ public:
   MyHashtable(int capacity, double loadFactor): capacity(capacity), count(0), loadFactor(loadFactor) {
     
     this->table.resize(capacity, nullptr);
+    this->partition = (int)(this->capacity/16);
   }
 
   virtual ~MyHashtable() {    
