@@ -32,7 +32,7 @@ protected:
   int count;
   double loadFactor;
   int partition;
-  int buckets = 50;
+  int buckets = 4;
   mutable std::vector<std::unique_ptr<std::mutex>> lock;
 
   std::vector<Node<K,V>*> table;
