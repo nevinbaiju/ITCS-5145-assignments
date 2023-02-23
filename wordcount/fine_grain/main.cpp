@@ -97,14 +97,14 @@ int main(int argc, char **argv)
   int i = 0;
   int length = wordmap.size();
   for (auto & filecontent: wordmap) {
-    std::cout << i << "/" << wordmap.size() << '\n';
+    // std::cout << i << "/" << wordmap.size() << '\n';
     int length = filecontent.size();
     // std::cout << "Thread sizesdfsdf=" << length << "\n";
     // std::thread fileThreads[length];
     std::vector<std::thread> fileThreads;
     int wc = 0;
     for (auto & w : filecontent) {
-      std::cout << wc << "/" << filecontent.size() << '\n';
+      // std::cout << wc << "/" << filecontent.size() << '\n';
       fileThreads.push_back(std::thread(increment, w, std::ref(dict)));
       // increment(w, dict);
       if(fileThreads.size() == 20){
