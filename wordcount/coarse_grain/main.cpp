@@ -90,20 +90,18 @@ int main(int argc, char **argv)
   // Start Timer
   auto start =std::chrono::steady_clock::now();
   int total_threads = wordmap.size();
-  std::thread fileThreads[total_threads];
+  std::vector<std::thread> fileThreads;
 
   // Populate Hash Table
-  int i = 0;
   // Populate Hash Table
   // for (int i=0; i<total_threads; i++){
   //   fileThreads[i] = std::thread(hash_words, wordmap[i], dict);
   // }
   for (auto & filecontent: wordmap) {
-    fileThreads[i] = std::thread(hash_words, std::ref(filecontent), std::ref(dict));
-    i++;
+    fileThreads.push_back(std::move(std::thread(hash_words, std::ref(filecontent), std::ref(dict))));
     // hash_words(filecontent, dict);
   }
-  for(int i=0; i<total_threads; i++){
+  for(int i=0; i<fileThreads.size(); i++){
     fileThreads[i].join();
   }
 
