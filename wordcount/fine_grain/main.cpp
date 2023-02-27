@@ -8,6 +8,7 @@
 #include "Dictionary.cpp"
 #include "MyHashtable.cpp"
 
+std::mutex hash_table_mutex;
 
 //Tokenize a string into individual word, removing punctuation at the
 //end of words
@@ -48,14 +49,15 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
   return ret;
 }
 
-void increment(std::string key, Dictionary<std::string, int> & dict){
-  // std::cout<< "getting\n";
-  // std::cout << key <<"\n";
-  // std::cout<< "before getting\n";
-  int count = dict.get(key);
-  ++count;
-  // std::cout<< "setting\n";
-  dict.set(key, count);
+void hash_words(std::vector<std::string> & filecontent, Dictionary<std::string, int> & dict){
+
+  for (auto & w : filecontent) {
+    hash_table_mutex.lock();
+    int count = dict.get(w);
+    ++count;
+    dict.set(w, count);
+    hash_table_mutex.unlock();
+  }
 }
 
 int main(int argc, char **argv)
@@ -69,6 +71,7 @@ int main(int argc, char **argv)
   std::string source = argv[1];
   std::string testWord = argv[2];
   int32_t thresholdCount = std::stoi(argv[3]);
+
   // Obtain List of Files
   std::vector<std::string> files;
   std::ifstream in (source);
@@ -76,6 +79,7 @@ int main(int argc, char **argv)
   while (getline(in, line, '\n')) {
     files.push_back(line);
   }
+  std::cout << testWord << std::endl;
 
   // Tokenize Lyrics
   auto wordmap = tokenizeLyrics(files);
@@ -87,41 +91,20 @@ int main(int argc, char **argv)
   // Start Timer
   auto start =std::chrono::steady_clock::now();
   int total_threads = wordmap.size();
-  std::thread fileThreads[total_threads];
+  std::vector<std::thread> fileThreads;
 
   // Populate Hash Table
   // Populate Hash Table
   // for (int i=0; i<total_threads; i++){
   //   fileThreads[i] = std::thread(hash_words, wordmap[i], dict);
   // }
-  int i = 0;
-  int length = wordmap.size();
   for (auto & filecontent: wordmap) {
-    // std::cout << i << "/" << wordmap.size() << '\n';
-    int length = filecontent.size();
-    // std::cout << "Thread sizesdfsdf=" << length << "\n";
-    // std::thread fileThreads[length];
-    std::vector<std::thread> fileThreads;
-    int wc = 0;
-    for (auto & w : filecontent) {
-      // std::cout << wc << "/" << filecontent.size() << '\n';
-      fileThreads.push_back(std::thread(increment, w, std::ref(dict)));
-      // increment(w, dict);
-      if(fileThreads.size() == 20){
-        for(int i=fileThreads.size()-1; i>=0; i--){
-          fileThreads[i].join();
-          fileThreads.pop_back();
-        }
-      }
-      wc++;
-    }
-    for(int i=fileThreads.size()-1; i>=0; i--){
-          fileThreads[i].join();
-          fileThreads.pop_back();
-    }
-    i++;
+    fileThreads.push_back(std::move(std::thread(hash_words, std::ref(filecontent), std::ref(dict))));
+    // hash_words(filecontent, dict);
   }
-
+  for(int i=0; i<fileThreads.size(); i++){
+    fileThreads[i].join();
+  }
 
   // Stop Timer
   auto stop = std::chrono::steady_clock::now();
