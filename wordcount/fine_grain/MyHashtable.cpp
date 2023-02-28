@@ -32,7 +32,7 @@ protected:
   int count;
   double loadFactor;
   int partition;
-  int buckets = 4;
+  int buckets = 16;
   mutable std::vector<std::unique_ptr<std::mutex>> lock;
 
   std::vector<Node<K,V>*> table;
@@ -125,7 +125,7 @@ public:
     while (node != nullptr) {
       if (node->key == key){
         lock[mutex_id]->unlock();
-        // std::cout << mutex_id << " UnLocked\n";
+        // std::cout << lock.size() << " UnLocked\n";
 	      return node->value;
       }
       node = node->next;
