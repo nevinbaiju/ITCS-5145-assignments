@@ -8,8 +8,6 @@
 #include "Dictionary.cpp"
 #include "MyHashtable.cpp"
 
-std::mutex hash_table_mutex;
-
 //Tokenize a string into individual word, removing punctuation at the
 //end of words
 std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::string> files) {
@@ -52,11 +50,9 @@ std::vector<std::vector<std::string>> tokenizeLyrics(const std::vector<std::stri
 void hash_words(std::vector<std::string> & filecontent, Dictionary<std::string, int> & dict){
 
   for (auto & w : filecontent) {
-    hash_table_mutex.lock();
     int count = dict.get(w);
     ++count;
     dict.set(w, count);
-    hash_table_mutex.unlock();
   }
 }
 
