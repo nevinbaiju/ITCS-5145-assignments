@@ -6,7 +6,6 @@
 #include <cmath>
 #include "static_loop.cpp"
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,16 +20,43 @@ float f4(float x, int intensity);
 #endif
 
 float compute (float (*func)(float, int), float a, float b, int n, int intensity){
+  StaticLoop sl;
   float b_minus_a_over_n = (b - a)/n;
   float ans = 0;
-  for (int i = 0; i<n; i++){
-    ans = ans + func(a + (i + 0.5)*b_minus_a_over_n, intensity);
-  }
+
+  sl.parfor<float>(0, n, 1,
+		 [&](float& tls) -> void{
+		   tls = 0;
+		 },
+		 [&](int i, float& tls) -> void{
+		   tls += func(a + (i + 0.5)*b_minus_a_over_n, intensity);
+      //  std::cout << i << " " << tls << "\n";
+		  },
+		 [&](float tls) -> void{
+		   ans += tls;
+		 }
+		 );
+  // std::cout << ans << std::endl;
   ans = ans*b_minus_a_over_n;
 
   return ans;
 
 }
+
+// float compute_og (float (*func)(float, int), float a, float b, int n, int intensity){
+//   float b_minus_a_over_n = (b - a)/n;
+//   float ans = 0;
+//   for (int i = 0; i<n; i++){
+//     ans = ans + func(a + (i + 0.5)*b_minus_a_over_n, intensity);
+//     std::cout << i << " " << ans << "\n";
+//   }
+//   std::cout << ans << std::endl;
+//   ans = ans*b_minus_a_over_n;
+
+//   return ans;
+
+// }
+
 
 int main (int argc, char* argv[]) {
 
@@ -49,6 +75,7 @@ int main (int argc, char* argv[]) {
     case 1:{
       float ans = compute(&f1, a, b, n, intensity);
       std::cout << ans << "\n";
+      // std::cout << compute_og(&f1, a, b, n, intensity) << "\n";
       break;
     }
 
