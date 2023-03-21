@@ -2,15 +2,22 @@
 #define __STATIC_LOOP_H
 
 #include <functional>
+#include <iostream>
+#include <algorithm>
+#include <thread>
+#include <mutex>
+
 
 class StaticLoop {
 private:
   // @brief you will want to have class member to store the number of threads
   // add a public setter function for this member.
-
+  int num_threads;
 public:
   // @breif write setters here.
-
+  StaticLoop(int num_threads)
+    : num_threads(num_threads)
+    {}
 
 
   /// @brief execute the function f multiple times with different
@@ -25,6 +32,7 @@ public:
       f(i);
     }
   }
+
 
   /// @brief execute the function f multiple times with different
   /// parameters possibly in parallel
@@ -49,13 +57,43 @@ public:
 	       std::function<void(int, TLS&)> f,
 	       std::function<void(TLS&)> after
 	       ) {
-    TLS tls;
-    before(tls);    
-    for (size_t i=beg; i<end; i+= increment) {
-      f(i, tls);
+    std::mutex after_mutex;
+    // TLS tls;
+    // before(tls); 
+    
+    // for (size_t i=beg; i<end; i+= increment) {
+    //   f(i, tls);
+    // }
+    // after(tls);
+
+    std::vector<std::thread> integration_threads;
+    int partition_size = (end-beg)/num_threads;
+    for(int i=beg; i<end; i+=partition_size){
+      if (integration_threads.size() == num_threads){
+        while(integration_threads.size() != 0){
+          int last_index = integration_threads.size()-1;
+          integration_threads[last_index].join();
+          integration_threads.pop_back();
+        }
+      }
+      int chunk_beg = i;
+      int chunk_end = std::min(i+partition_size, (int)end);
+      integration_threads.push_back(std::move(std::thread([&](int start, int end, int increment) -> void{
+		   TLS tls;
+       before(tls);
+       for(int i=start; i<end; i+=increment){
+          f(i, tls);
+       }
+       after_mutex.lock();
+       after(tls);
+       after_mutex.unlock();
+		 }, chunk_beg, chunk_end, increment)));
     }
-    after(tls);
+    for(int i=0; i<integration_threads.size(); i++){
+      integration_threads[i].join();
+    }
   }
+  
   
 };
 
