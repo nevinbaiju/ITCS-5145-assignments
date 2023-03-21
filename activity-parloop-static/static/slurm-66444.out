@@ -1,0 +1,4 @@
+running on gal-c3.uncc.edu
+THREAD=16: before starting time is Tue Mar 21 02:00:03 EDT 2023
+
+slurmstepd: error: *** JOB 66444 ON gal-c3 CANCELLED AT 2023-03-21T04:00:30 DUE TO TIME LIMIT ***
