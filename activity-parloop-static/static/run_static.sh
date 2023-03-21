@@ -27,15 +27,17 @@ fi
 # $INTENSITIES and $NSPLOT
 source ../params.sh
 
-
-# debugging statments 
-echo THREAD=${THREAD}: before starting time is $(date)
-echo 
-for intensity in $INTENSITIES;
-do
-    for n in $NSPLOT;
+for THREAD in $THREADS;
     do
- 	./static_sched 1 0 10 ${n} ${intensity} ${THREAD} 2>${RESULTDIR}/static_${n}_${intensity}_${THREAD}  >/dev/null 
+    # debugging statments 
+    echo THREAD=${THREAD}: before starting time is $(date)
+    echo 
+    for intensity in $INTENSITIES;
+    do
+        for n in $NSPLOT;
+        do
+        ./static_sched 1 0 10 ${n} ${intensity} ${THREAD} 2>${RESULTDIR}/static_${n}_${intensity}_${THREAD}  >/dev/null 
+        done
     done
 done
 
