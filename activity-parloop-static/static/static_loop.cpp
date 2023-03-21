@@ -69,13 +69,13 @@ public:
     std::vector<std::thread> integration_threads;
     int partition_size = (end-beg)/num_threads;
     for(int i=beg; i<end; i+=partition_size){
-      if (integration_threads.size() == num_threads){
-        while(integration_threads.size() != 0){
-          int last_index = integration_threads.size()-1;
-          integration_threads[last_index].join();
-          integration_threads.pop_back();
-        }
-      }
+      // if (integration_threads.size() == num_threads){
+      //   while(integration_threads.size() != 0){
+      //     int last_index = integration_threads.size()-1;
+      //     integration_threads[last_index].join();
+      //     integration_threads.pop_back();
+      //   }
+      // }
       int chunk_beg = i;
       int chunk_end = std::min(i+partition_size, (int)end);
       integration_threads.push_back(std::move(std::thread([&](int start, int end, int increment) -> void{
