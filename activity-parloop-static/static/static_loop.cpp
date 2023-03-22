@@ -67,7 +67,15 @@ public:
     // after(tls);
 
     std::vector<std::thread> integration_threads;
-    int partition_size = (end-beg)/num_threads;
+    int partition_size;
+    if ((end-beg) < num_threads){
+      std::cout << "smaller" << std::endl;
+      partition_size = (end-beg)-1;
+    }
+    else{
+      partition_size = (end-beg)/num_threads;
+    }
+    
     for(int i=beg; i<end; i+=partition_size){
       // if (integration_threads.size() == num_threads){
       //   while(integration_threads.size() != 0){
@@ -76,6 +84,7 @@ public:
       //     integration_threads.pop_back();
       //   }
       // }
+      // std::cout << i << std::endl;
       int chunk_beg = i;
       int chunk_end = std::min(i+partition_size, (int)end);
       integration_threads.push_back(std::move(std::thread([&](int start, int end, int increment) -> void{
