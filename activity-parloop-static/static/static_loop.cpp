@@ -69,8 +69,7 @@ public:
     std::vector<std::thread> integration_threads;
     int partition_size;
     if ((end-beg) < num_threads){
-      std::cout << "smaller" << std::endl;
-      partition_size = (end-beg)-1;
+      partition_size = (end-beg);
     }
     else{
       partition_size = (end-beg)/num_threads;
