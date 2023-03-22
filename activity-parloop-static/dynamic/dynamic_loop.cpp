@@ -65,7 +65,13 @@ public:
     // after(tls);
 
     std::vector<std::thread> integration_threads;
-    int partition_size = (end-beg)/granularity;
+    int partition_size;
+    if ((end-beg) < granularity){
+      partition_size = (end-beg)-1;
+    }
+    else{
+      partition_size = (end-beg)/granularity;
+    }
     for(int i=beg; i<end; i+=partition_size){
       if (integration_threads.size() == num_threads){
         while(integration_threads.size() != 0){
