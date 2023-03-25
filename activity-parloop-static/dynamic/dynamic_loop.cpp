@@ -4,6 +4,7 @@
 #include <functional>
 #include <mutex>
 #include <thread>
+#include <iostream>
 
 class DynamicLoop {
 private:
@@ -11,6 +12,7 @@ private:
   // add a public setter function for this member.
   int num_threads;
   int granularity;
+  std::mutex after_mutex;
 public:
   // @breif write setters here.
   DynamicLoop(int num_threads, int granularity)
@@ -32,6 +34,28 @@ public:
   }
 
 
+  // template<typename TLS>
+  static void perform_reduce(int start, int end, size_t increment
+	      //  std::function<void(TLS&)> before,
+	      //  std::function<void(int, TLS&)> f,
+	      //  std::function<void(TLS&)> after
+         ){
+		  //  TLS tls;
+      //  before(tls);
+      //  for(int i=start; i<end; i+=increment){
+      //     f(i, tls);
+      //  }
+      //  after_mutex.lock();
+      //  after(tls);
+      //  after_mutex.unlock();
+      std::cout << start << " " << end << std::endl;
+	}
+
+  static void demo(int start, int end){
+    for(int i=start; i<end; i++){
+      std::cout << i << std::endl;
+    }
+  }
   /// @brief execute the function f multiple times with different
   /// parameters possibly in parallel
   ///
@@ -55,7 +79,7 @@ public:
 	       std::function<void(int, TLS&)> f,
 	       std::function<void(TLS&)> after
 	       ) {
-    std::mutex after_mutex;
+    
     // TLS tls;
     // before(tls); 
     
@@ -72,17 +96,17 @@ public:
     else{
       partition_size = (end-beg)/granularity;
     }
-    for(int i=beg; i<end; i+=partition_size){
-      if (integration_threads.size() == num_threads){
-        while(integration_threads.size() != 0){
-          int last_index = integration_threads.size()-1;
-          integration_threads[last_index].join();
-          integration_threads.pop_back();
-        }
-      }
-      int chunk_beg = i;
-      int chunk_end = std::min(i+partition_size, (int)end);
-      integration_threads.push_back(std::move(std::thread([&](int start, int end, int increment) -> void{
+    
+
+    std::vector<std::thread> threads;
+    
+    // bool thread_empty_status[num_threads];
+    // for (int j=0; j<num_threads; j++)
+    // {
+    //     thread_empty_status[j] = true;
+    // }
+
+    auto reduce_lambda = [&](int start, int end, int increment) -> void{
 		   TLS tls;
        before(tls);
        for(int i=start; i<end; i+=increment){
@@ -91,10 +115,38 @@ public:
        after_mutex.lock();
        after(tls);
        after_mutex.unlock();
-		 }, chunk_beg, chunk_end, increment)));
+		 };
+
+    int i = beg;
+    int chunk_beg, chunk_end;
+
+    while(i < end){
+      // for (int thread_id=0; thread_id<num_threads; thread_id++){
+      //   std::cout << "Visiting thread id " << thread_id << std::endl;
+        // if(thread_empty_status[thread_id]){
+        //   std::cout << "THread " << thread_id << std::endl;
+        //   thread_empty_status[thread_id] = false;
+        //   chunk_beg = i;
+        //   chunk_end = std::min(i+granularity, (int)end);
+        //   threads[thread_id] = std::move(std::thread(reduce_lambda, chunk_beg, chunk_end, increment, thread_id));
+        //   i = i+granularity;
+        // }
+        chunk_beg = i;
+        chunk_end = std::min(i+granularity, (int)end);
+        // std::cout << chunk_beg << " " << chunk_end << std::endl;
+        threads.push_back(std::move(std::thread(reduce_lambda, chunk_beg, chunk_end, increment)));
+        i = i+granularity;
+        if (threads.size() >= num_threads) {
+            // wait for the threads to finish before spawning more
+            for (auto& t : threads) {
+                t.join();
+            }
+            threads.clear();
+        }
+      // }
     }
-    for(int i=0; i<integration_threads.size(); i++){
-      integration_threads[i].join();
+    for (auto& t : threads) {
+      t.join();
     }
   }
   
