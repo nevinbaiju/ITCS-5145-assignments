@@ -39,6 +39,7 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
                 }
   );
   
+  parloop.setGranularity(10000);
   for (int k = 0; k < m + n - 1; k++) {
     parloop.parfor(0, m, 1,
                 [&](int i){
