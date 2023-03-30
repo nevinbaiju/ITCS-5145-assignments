@@ -31,18 +31,28 @@ public:
                std::function<void(int, TLS&)> f,
                std::function<void(TLS&)> after
                ) {
-#pragma omp parallel num_threads(nbthread)
-    {
-      TLS tls;
-      before(tls);
-      
-#pragma omp for schedule(dynamic, granularity) 
-      for (size_t i=beg; i<end; i+= increment) {
-	f(i, tls);
-      }
-#pragma omp critical
-      after(tls);
-    }
+    #pragma omp parallel num_threads(nbthread)
+        {
+          TLS tls;
+          before(tls);
+          
+    #pragma omp for schedule(dynamic, granularity) 
+          for (size_t i=beg; i<end; i+= increment) {
+      f(i, tls);
+          }
+    #pragma omp critical
+          after(tls);
+        }
+  }
+
+  void parfor (size_t beg, size_t end, size_t increment,
+               std::function<void(int)> f
+               ) {
+
+    #pragma omp for schedule(dynamic, granularity) 
+          for (size_t i=beg; i<end; i+= increment) {
+      f(i);
+          }
   }
 
 };

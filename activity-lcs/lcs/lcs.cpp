@@ -18,27 +18,70 @@ extern "C" {
 }
 #endif
 
-int LCS(char* X, int m, char* Y, int n) {
+int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
 
   int** C = new int*[m+1];
-  for (int i=0; i<=m; ++i) {
-    C[i] = new int[n+1];
-    C[i][0] = 0;
-  }
-  for (int j=0; j<=n; ++j) {
-    C[0][j] = 0;
+
+  OmpLoop parloop;
+  parloop.setNbThread(num_threads);
+
+  parloop.setGranularity(1);
+  parloop.parfor(0, m+1, 1,
+                [&](int i){
+                  C[i] = new int[n+1];
+                  C[i][0] = 0;
+                }
+  );
+
+  parloop.parfor(0, n+1, 1,
+                [&](int i){
+                  C[0][i] = 0;
+                }
+  );
+  
+  for (int k = 0; k < m + n - 1; k++) {
+    parloop.parfor(0, m, 1,
+                [&](int i){
+                int j = k - i, a, b;
+                if (j >= 0 && j < n) {
+                  a = i+1;
+                  b = j+1;
+                  if (X[a-1] == Y[b-1]) {
+                    C[a][b] = C[a-1][b-1] + 1; 
+                  } else {
+                    C[a][b] = std::max(C[a-1][b], C[a][b-1]);
+                  }
+                }
+                });
+
+
+    // for (int i = 0; i < m; i++) {
+    //   int j = k - i;
+    //   if (j >= 0 && j < n) {
+    //     a = i+1;
+    //     b = j+1;
+    //     if (X[a-1] == Y[b-1]) {
+    //       C[a][b] = C[a-1][b-1] + 1; 
+    //     } else {
+    //       C[a][b] = std::max(C[a-1][b], C[a][b-1]);
+    //     }
+    //   }
+    // }
+    // std::cout << std::endl;
   }
 
-  for (int a=1; a<=m; ++a) {
-    for (int b=1; b<=n; ++b) {
-      if (X[a-1] == Y[b-1]) {
-        C[a][b] = C[a-1][b-1] + 1; 
-      } else {
-        C[a][b] = std::max(C[a-1][b], C[a][b-1]);
-      }
-    }
-  }
 
+  // for (int a=1; a<=m; ++a) {
+  //   for (int b=1; b<=n; ++b) {
+  //     // std::cout << a << " " << b << " : ";
+  //     if (X[a-1] == Y[b-1]) {
+  //       C[a][b] = C[a-1][b-1] + 1; 
+  //     } else {
+  //       C[a][b] = std::max(C[a-1][b], C[a][b-1]);
+  //     }
+  //   }
+  //   // std::cout << std::endl;
+  // }
   int result = C[m][n];
 
   for (int i=0; i<=m; ++i) { 
@@ -57,6 +100,7 @@ int main (int argc, char* argv[]) {
 
   int m = atoi(argv[1]);
   int n = atoi(argv[2]);
+  int num_threads = atoi(argv[3]);
 
   // get string data 
   char *X = new char[m];
@@ -68,7 +112,7 @@ int main (int argc, char* argv[]) {
   std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
   int result = -1; // length of common subsequence
 
-  result = LCS(X, m, Y, n);
+  result = parallelLCS(X, m, Y, n, num_threads);
   checkLCS(X, m, Y, n, result);
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
