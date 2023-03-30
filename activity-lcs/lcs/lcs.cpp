@@ -25,7 +25,7 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
   OmpLoop parloop;
   parloop.setNbThread(num_threads);
 
-  parloop.setGranularity(num_threads);
+  parloop.setGranularity(1);
   parloop.parfor(0, m+1, 1,
                 [&](int i){
                   C[i] = new int[n+1];
@@ -38,8 +38,8 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
                   C[0][i] = 0;
                 }
   );
-  
-  parloop.setGranularity(num_threads);
+  // parloop.setGranularity(10);
+  parloop.setGranularity((int)(std::max(n,m)/10));
   for (int k = 0; k < m + n - 1; k++) {
     parloop.parfor(0, m, 1,
                 [&](int i){
@@ -102,7 +102,7 @@ int main (int argc, char* argv[]) {
   int m = atoi(argv[1]);
   int n = atoi(argv[2]);
   int num_threads = atoi(argv[3]);
-  std::cout << "num threads" << num_threads<< std::endl;
+  // std::cout << "num threads" << num_threads<< std::endl;
 
   // get string data 
   char *X = new char[m];
