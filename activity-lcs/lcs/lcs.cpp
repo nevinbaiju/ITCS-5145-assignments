@@ -24,8 +24,8 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
 
   OmpLoop parloop;
   parloop.setNbThread(num_threads);
-  int division_factor = 10;
-  parloop.setGranularity((int)(m/division_factor));
+  int granularity = std::max(10, (int)(std::max(n, m)/100));
+  parloop.setGranularity(granularity);
 
   parloop.parfor(0, m+1, 1,
                 [&](int i){
@@ -34,13 +34,11 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
                 }
   );
 
-  parloop.setGranularity((int)(n/division_factor));
   parloop.parfor(0, n+1, 1,
                 [&](int i){
                   C[0][i] = 0;
                 }
   );
-  parloop.setGranularity((int)(std::max(n, m)/division_factor));
   
   for (int k = 0; k < m + n - 1; k++) {
     parloop.parfor(0, m, 1,
