@@ -50,7 +50,7 @@ int main (int argc, char* argv[]) {
   }
 
   OmpLoop parloop;
-  int granularity = (int)n/10;
+  int granularity = (int)n/100;
   parloop.setGranularity(granularity);
   parloop.setNbThread(num_threads);
   parloop.parfor(0, n, 1, 
