@@ -17,6 +17,7 @@ extern "C" {
 }
 #endif
 
+#define DEBUG false  
 
 int main (int argc, char* argv[]) {
   if (argc < 3) {
@@ -37,17 +38,19 @@ int main (int argc, char* argv[]) {
 
   prefix[0] = 0;
 
-  for (int i=0; i<n; ++i) {
-    std::cout << arr[i] << ", ";
-  }
-  std::cout << std::endl;
+  #if DEBUG
+    for (int i=0; i<n; ++i) {
+      std::cout << arr[i] << ", ";
+    }
+    std::cout << std::endl;
+  #endif
 
-  // for (int i=0; i<n; ++i) {
-  //   prefix[i+1] = prefix[i] + arr[i];
-  // }
+  for (int i=0; i<n; ++i) {
+    prefix[i+1] = prefix[i] + arr[i];
+  }
 
   OmpLoop parloop;
-  int granularity = (int)n/num_threads;
+  int granularity = (int)n/10;
   parloop.setGranularity(granularity);
   parloop.setNbThread(num_threads);
   parloop.parfor(0, n, 1, 
@@ -55,20 +58,12 @@ int main (int argc, char* argv[]) {
                   prefix[i+1] = prefix[i] + arr[i];
                 });
   
-  for (int i=1; i<=n; ++i) {
-    std::cout << prefix[i] << ", ";
-  }
-  std::cout << std::endl;
-  parloop.parfor(1, n+1, 1, 
-                [&](int i){
-                  int chunk = (int)(i/granularity);
-                  prefix[i] = prefix[i] + prefix[(chunk*granularity)-1];
-                });
-  
-  for (int i=1; i<=n; ++i) {
-    std::cout << prefix[i] << ", ";
-  }
-  std::cout << std::endl;
+  #if DEBUG
+    for (int i=1; i<=n; ++i) {
+      std::cout << prefix[i] << ", ";
+    }
+    std::cout << std::endl;
+  #endif
 
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
