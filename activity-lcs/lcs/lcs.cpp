@@ -25,22 +25,29 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
   OmpLoop parloop;
   parloop.setNbThread(num_threads);
   int granularity = std::max(10, (int)(std::max(n, m)/100));
-  parloop.setGranularity(granularity);
+  //Initializing row and columns of the matrix with 0.
+  // parloop.parfor(0, m+1, 1,
+  //               [&](int i){
+  //                 C[i] = new int[n+1];
+  //                 C[i][0] = 0;
+  //               }
+  // );
 
-  parloop.parfor(0, m+1, 1,
-                [&](int i){
-                  C[i] = new int[n+1];
-                  C[i][0] = 0;
-                }
-  );
-
-  parloop.parfor(0, n+1, 1,
-                [&](int i){
-                  C[0][i] = 0;
-                }
-  );
-  
+  // parloop.parfor(0, n+1, 1,
+  //               [&](int i){
+  //                 C[0][i] = 0;
+  //               }
+  // );
+  for (int i=0; i<=m; ++i) {
+    C[i] = new int[n+1];
+    C[i][0] = 0;
+  }
+  for (int j=0; j<=n; ++j) {
+    C[0][j] = 0;
+  }
+  // Iterating over all the diagonals of the matrix.
   for (int k = 0; k < m + n - 1; k++) {
+    // Iterating over all the elements in the diagonal in parallel
     parloop.parfor(0, m, 1,
                 [&](int i){
                 int j = k - i, a, b;
