@@ -39,7 +39,7 @@ void merge(int * arr, int l, int m, int r)
     k = l;
     while (i < n1 && j < n2)
     {
-        std::cout << n1 << " " << i << " " << n2 << " " << j << " " << std::endl;
+        // std::cout << n1 << " " << i << " " << n2 << " " << j << " " << std::endl;
         if (L[i] <= R[j])
         {
             arr[k] = L[i];
@@ -53,21 +53,21 @@ void merge(int * arr, int l, int m, int r)
         k++;
     }
  
-    // /* Copy the remaining elements of L[], if there are any */
-    // while (i < n1)
-    // {
-    //     arr[k] = L[i];
-    //     i++;
-    //     k++;
-    // }
+    /* Copy the remaining elements of L[], if there are any */
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
  
-    // /* Copy the remaining elements of R[], if there are any */
-    // while (j < n2)
-    // {
-    //     arr[k] = R[j];
-    //     j++;
-    //     k++;
-    // }
+    /* Copy the remaining elements of R[], if there are any */
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
 }
 
 void print_arr(int * arr, int start, int end){
@@ -110,7 +110,7 @@ void mergesort(int * arr, int n, int num_threads)
       //                   print_arr(arr, left_start, right_end);
       //               });
       //  Pick starting point of different subarrays of current size
-      std::cout << "Curr size: " << curr_size << std::endl; 
+      // std::cout << "Curr size: " << curr_size << std::endl; 
        for (left_start=0; left_start<n-1; left_start += 2*curr_size)
        {
           if (left_start >= n){
