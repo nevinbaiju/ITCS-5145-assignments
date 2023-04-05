@@ -24,7 +24,7 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
 
   OmpLoop parloop;
   parloop.setNbThread(num_threads);
-  int granularity = std::max(10, (int)(std::max(n, m)/100));
+  int granularity = std::max(10, (int)(std::max(n, m)/50));
   //Initializing row and columns of the matrix with 0.
   // parloop.parfor(0, m+1, 1,
   //               [&](int i){
@@ -48,12 +48,14 @@ int parallelLCS(char* X, int m, char* Y, int n, int num_threads) {
   // Iterating over all the diagonals of the matrix.
   for (int k = 0; k < m + n - 1; k++) {
     // Iterating over all the elements in the diagonal in parallel
-    parloop.parfor(0, m, 1,
+    parloop.parfor(0, std::min(m,k+1), 1,
                 [&](int i){
-                int j = k - i, a, b;
+                int j = k - i;
+                int a, b;
                 if (j >= 0 && j < n) {
                   a = i+1;
                   b = j+1;
+                  //std::cout<<a<<" " <<b<<"\n";
                   if (X[a-1] == Y[b-1]) {
                     C[a][b] = C[a-1][b-1] + 1; 
                   } else {
@@ -122,11 +124,11 @@ int main (int argc, char* argv[]) {
   int result = -1; // length of common subsequence
 
   result = parallelLCS(X, m, Y, n, num_threads);
-  checkLCS(X, m, Y, n, result);
 
   std::chrono::time_point<std::chrono::system_clock> end = std::chrono::system_clock::now();
   std::chrono::duration<double> elpased_seconds = end-start;
   std::cerr<<elpased_seconds.count()<<std::endl;
+  checkLCS(X, m, Y, n, result);
   delete[] X;
   delete[] Y;
 
