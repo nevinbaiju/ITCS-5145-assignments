@@ -25,8 +25,10 @@ void merge(int * arr, int l, int m, int r)
     int n2 =  r - m;
  
     /* create temp arrays */
-    int L[n1], R[n2];
- 
+    //int L[n1], R[n2];
+    std::vector<int> L (n1);
+    std::vector<int> R(n2);
+
     /* Copy data to temp arrays L[] and R[] */
     for (i = 0; i < n1; i++)
         L[i] = arr[l + i];
