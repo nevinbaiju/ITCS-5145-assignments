@@ -18,6 +18,7 @@ extern "C" {
 
 #define DEBUG 0
 
+// geeksforgeeks - https://www.geeksforgeeks.org/iterative-merge-sort/
 void merge(int * arr, int l, int m, int r)
 {
     int i, j, k;
@@ -83,7 +84,7 @@ void mergesort(int * arr, int n, int num_threads)
    
    OmpLoop parloop;
    parloop.setNbThread(num_threads);
-   parloop.setGranularity(1);
+   parloop.setGranularity(std::max(10, n/100));
    int merge_counter = 0;
    bool break_condition = false;
    for (curr_size=1; curr_size<=n-1; curr_size = 2*curr_size)
