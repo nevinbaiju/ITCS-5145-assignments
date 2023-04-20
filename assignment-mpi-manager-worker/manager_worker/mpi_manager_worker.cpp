@@ -10,7 +10,6 @@
 extern "C" {
 #endif
 
-#define GRANULARITY 100
 #define DEBUG 0
 
 float f1(float x, int intensity);
@@ -29,7 +28,7 @@ void compute (float (*func)(float, int), float a, float b, int n, int intensity,
   std::vector<float> curr_ans(1);
 
   MPI_Status s;
-
+  int GRANULARITY=n/1000;
   if(rank ==0){
     ans[0] = 0;
     int current_communicator = 1;
