@@ -13,7 +13,7 @@ __global__ void polynomial_expansion (float* poly, int degree,
       out += xtothepowerof*poly[i];
       xtothepowerof *= x;
     }
-    array[idx] = 2;
+    array[idx] = out;
   }
 
 }
